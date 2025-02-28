@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { globalStyles } from '../theme/global.styles';
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const FormProduct = ({ type, product }: Props) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const navigation = useNavigation<NavigationProp<RootStackParams>>();
     const { control, handleSubmit, setValue, formState: { errors }, reset } = useForm({
         defaultValues: {
@@ -29,7 +30,8 @@ export const FormProduct = ({ type, product }: Props) => {
 
     const {
         createProduct,
-        updateProduct
+        updateProduct,
+        verifyProduct
     } = useProducts({ type: 'create' });
 
     const esFechaValida = (fecha: any) => {
@@ -56,7 +58,6 @@ export const FormProduct = ({ type, product }: Props) => {
 
     const handleFechaLiberacionChange = (fecha: any) => {
         setValue('fechaLiberacion', fecha, { shouldValidate: true });
-
         if (esFechaValida(fecha) === true) {
             const revision = calcularFechaRevision(fecha);
             setValue('fechaRevision', revision);
@@ -67,6 +68,7 @@ export const FormProduct = ({ type, product }: Props) => {
 
     const onSubmit = (data: any) => {
         try {
+            setIsLoading(true);
             if (type === 'create') {
                 createProduct(data);
             } else {
@@ -76,6 +78,8 @@ export const FormProduct = ({ type, product }: Props) => {
             navigation.navigate('Products');
         } catch (error) {
             console.error(error)
+        }finally {
+            setIsLoading(false);
         }
     };
 
@@ -88,15 +92,26 @@ export const FormProduct = ({ type, product }: Props) => {
                 rules={{ 
                     required: 'El ID es obligatorio', 
                     minLength: { value: 3, message: 'Debe tener al menos 3 caracteres' },
-                    maxLength: { value: 10, message: 'Debe tener máximo 10 caracteres' }
+                    maxLength: { value: 10, message: 'Debe tener máximo 10 caracteres' },
+                    validate: async (id) => {
+                        const existe = await verifyProduct(id);
+                        if (existe) {
+                            return 'Este ID ya existe';
+                        }
+                        return true; // Si no existe, es válido.
+                    }
                 }}
-                
-                render={({ field: { onChange, value } }) => (
+                render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                        style={[styles.input, errors.id && styles.inputError]}
+                        style={[styles.input, type=== 'edit' && styles.disabledInput, errors.id && styles.inputError]}
                         value={value}
                         onChangeText={onChange}
                         placeholder="Ingresa el ID"
+                        editable={type!== 'edit'}
+                        onBlur={() => {
+                            onBlur();  // dispara la validación al salir
+                        }}
+                        
                     />
                 )}
             />
@@ -203,8 +218,9 @@ export const FormProduct = ({ type, product }: Props) => {
                 <Pressable
                     onPress={handleSubmit(onSubmit)}
                     style={globalStyles.prymaryButton}
+                    disabled={isLoading}
                 >
-                    <Text style={globalStyles.prymaryButtonText}>{type=== "create" ? 'Agregar' : 'Editar'}</Text>
+                    <Text style={globalStyles.prymaryButtonText}>{isLoading ? 'Enviando...' : type=== "create" ? 'Agregar' : 'Editar'}</Text>
                 </Pressable>
                 <Pressable
                     onPress={() => reset()}

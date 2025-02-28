@@ -8,8 +8,6 @@ export const App = () => {
   return (
     <NavigationContainer>
       <StackNavigation/>
-      
-
     </NavigationContainer>
   )
 }

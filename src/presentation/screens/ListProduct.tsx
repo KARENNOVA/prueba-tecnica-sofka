@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { globalStyles } from '../theme/global.styles';
 import { type RootStackParams } from '../routes/StackNavigation';
 import { useProducts } from '../hooks/useProducts';
-import { getList } from '../../services/product';
-
-
+import { Loading } from '../components/Loading';
 
 
 export const ListProduct = () => {
@@ -15,11 +13,9 @@ export const ListProduct = () => {
   
     const {
         listProducts,
+        isLoading
     } = useProducts({ type: 'list' });
 
-
-    
-    
 
     const filteredData = listProducts.filter(item =>
         item.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -36,7 +32,7 @@ export const ListProduct = () => {
         </TouchableOpacity>
     );
 
-    return (
+    return isLoading ? <Loading /> : (
         <View style={globalStyles.container}>
             <TextInput
                 style={styles.searchInput}

@@ -36,7 +36,7 @@ export const useProducts = ({ type, id }: Props) => {
 
 
   const fetchProducts = async (): Promise<Product[]> => {
-
+    setIsLoading(true)
     const listProd = await UseCases.listProductsUseCase(productFetcher);
     setListProducts(listProd);
     setIsLoading(false);
@@ -45,8 +45,10 @@ export const useProducts = ({ type, id }: Props) => {
 
 
   const fetchProductById = async (productId: string): Promise<Product> => {
+    setIsLoading(true)
     const product = await UseCases.getProductByIdUseCase(productFetcher, productId);
     setProduct(product)
+    setIsLoading(false)
     return product
   };
 
